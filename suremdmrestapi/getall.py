@@ -10,7 +10,6 @@ headers = {
 }
 email = os.getenv("MY_EMAIL")
 password = os.getenv("MY_PASSWORD")
-
 if not email or not password:
     raise ValueError("Chuj dupa cycki")
 response = requests.get(url, auth=(email, password), headers=headers)

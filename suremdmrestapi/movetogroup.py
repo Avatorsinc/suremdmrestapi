@@ -38,7 +38,11 @@ class DeviceAssignmentApp(QWidget):
         layout.addWidget(self.txt_output)
         self.setLayout(layout)
 
-        load_dotenv()
+        # Explicitly load the .env file from the current directory
+        load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
+
+        # Debugging the loaded environment variables
+        #self.debug_env_vars()
 
         self.group_url = "https://salling.eu.suremdm.io/api/v2/group/082400110/getall"
         self.assignment_url = "https://salling.eu.suremdm.io/api/v2/deviceassignment"
@@ -51,6 +55,11 @@ class DeviceAssignmentApp(QWidget):
         self.email = os.getenv("MY_EMAIL")
         self.password = os.getenv("MY_PASSWORD")
         self.credentials = (self.email, self.password)
+
+    def debug_env_vars(self):
+        """Debug function to print environment variables."""
+        print("Email:", os.getenv("MY_EMAIL"))
+        print("Password:", os.getenv("MY_PASSWORD"))
 
     def append_output(self, message):
         """Append a line of text to the output text edit."""
@@ -69,7 +78,6 @@ class DeviceAssignmentApp(QWidget):
 
         self.txt_output.clear()
         self.append_output("Fetching groups from API...")
-
 
         try:
             response = requests.get(
