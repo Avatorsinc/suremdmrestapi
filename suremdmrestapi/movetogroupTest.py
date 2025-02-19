@@ -37,15 +37,18 @@ class DeviceAssignmentApp(QWidget):
         layout.addWidget(self.txt_output)
         self.setLayout(layout)
 
+        # Load environment variables from a .env file
         load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 
-        self.group_url = "https://salling.eu.suremdm.io/api/v2/group/082400110/getall"
-        self.assignment_url = "https://salling.eu.suremdm.io/api/v2/deviceassignment"
+        # Replace these URLs and API keys with your public API endpoint details
+        self.group_url = "https://YOUR_API_ENDPOINT/api/v2/group/PLACEHOLDER/getall"
+        self.assignment_url = "https://YOUR_API_ENDPOINT/api/v2/deviceassignment"
         self.headers = {
-            'ApiKey': "296A306B-B3BA-4719-9921-BA40CA5C690D",
+            'ApiKey': "YOUR_API_KEY",
             'Content-Type': "application/json",
         }
 
+        # Credentials loaded from the .env file (e.g., MY_EMAIL, MY_PASSWORD)
         self.email = os.getenv("MY_EMAIL")
         self.password = os.getenv("MY_PASSWORD")
         self.credentials = (self.email, self.password)
@@ -60,11 +63,11 @@ class DeviceAssignmentApp(QWidget):
         self.txt_output.append(message)
 
     def get_device_id(self, device_name):
-        """Fetch the device ID from SureMDM based on the device name using a different approach."""
-        baseurl = "https://salling.eu.suremdm.io/api"        
+        """Fetch the device ID from the API based on the device name."""
+        baseurl = "https://YOUR_API_ENDPOINT/api"        
         Username = os.getenv("MY_EMAIL")
         Password = os.getenv("MY_PASSWORD")
-        ApiKey = os.getenv("API_KEY")              
+        ApiKey = os.getenv("API_KEY")  # Ensure API_KEY is set in your .env              
         url = baseurl + "/device"
         
         headers = {
@@ -90,9 +93,9 @@ class DeviceAssignmentApp(QWidget):
             if response.status_code == 200:
                 if response.text != '[]':
                     data = response.json()
-                    for device in data['rows']:
-                        if device['DeviceName'] == device_name:
-                            return device["DeviceID"]
+                    for device in data.get('rows', []):
+                        if device.get('DeviceName') == device_name:
+                            return device.get("DeviceID")
             else:
                 self.append_output(f"Error: {response.status_code} - {response.text}")
                 QMessageBox.critical(self, "API Error", f"Error fetching device ID: {response.text}")
@@ -162,16 +165,17 @@ class DeviceAssignmentApp(QWidget):
             QMessageBox.critical(self, "JSON Error", err)
             return
 
+        # Replace the valid prefixes with your own group path patterns if needed
         valid_prefixes = [
-            f"Home/PDA/DE/Netto/{store_id}",
-            f"Home/PDA/PL/Netto/{store_id}",
-            f"Home/PDA/DK/Netto/{store_id}",
-            f"Home/PDA/DK/Bilka/{store_id}",
-            f"Home/PDA/DK/BR/{store_id}",
-            f"Home/PDA/DK/Carls Jr/{store_id}",
-            f"Home/PDA/DK/Foetex/{store_id}",
-            f"Home/PDA/DK/Salling/{store_id}",
-            f"Home/PDA/DK/Salling Fashion Stores/{store_id}",
+            f"Home/PDA/DE/PLACEHOLDER/{store_id}",
+            f"Home/PDA/PL/PLACEHOLDER/{store_id}",
+            f"Home/PDA/DK/PLACEHOLDER/{store_id}",
+            f"Home/PDA/DK/PLACEHOLDER/{store_id}",
+            f"Home/PDA/DK/PLACEHOLDER/{store_id}",
+            f"Home/PDA/DK/PLACEHOLDER/{store_id}",
+            f"Home/PDA/DK/PLACEHOLDER/{store_id}",
+            f"Home/PDA/DK/PLACEHOLDER/{store_id}",
+            f"Home/PDA/DK/PLACEHOLDER/{store_id}",
             f"Home/PDA/WH/{store_id}"
         ]
 
