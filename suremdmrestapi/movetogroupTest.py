@@ -18,8 +18,8 @@ class DeviceAssignmentApp(QWidget):
         self.setGeometry(100, 100, 500, 400)
 
         # Create and configure widgets for store ID input
-        # If you want to use a store identifier that is not strictly numeric (e.g., alphanumeric or codes),
-        # change the label text and adjust any logic that depends on numeric formatting.
+        # The label indicates that the store ID is expected to be numeric.
+        # If you wish to use a different format (e.g., alphanumeric or a code), update this text and any associated logic.
         self.lbl_store = QLabel("Enter Store ID (numbers only or your code):")
         self.entry_store = QLineEdit()
         
@@ -82,24 +82,19 @@ class DeviceAssignmentApp(QWidget):
         Fetch the device ID from the API based on the provided device name.
         Update the base URL or parameters if your API uses a different approach.
         """
-        # Base API URL for device queries; replace with your endpoint as needed.
-        baseurl = "https://YOUR_API_ENDPOINT/api"
-        # Retrieve credentials and API key from environment variables.
+        baseurl = "https://YOUR_API_ENDPOINT/api"  # Replace with your device API endpoint as needed.
         Username = os.getenv("MY_EMAIL")
         Password = os.getenv("MY_PASSWORD")
         ApiKey = os.getenv("API_KEY")  # Ensure API_KEY is set in your .env file
         url = baseurl + "/device"
         
-        # Set up request headers using the API key.
         headers = {
             'ApiKey': ApiKey,
             'Content-Type': "application/json",
         }
         
-        # Credentials tuple for basic authentication.
         credentials = (Username, Password)
         
-        # JSON payload for the device search request.
         payload = {
             "ID": "AllDevices",
             "IsSearch": True,
@@ -116,7 +111,6 @@ class DeviceAssignmentApp(QWidget):
             if response.status_code == 200:
                 if response.text != '[]':
                     data = response.json()
-                    # Loop through the returned devices and match by device name
                     for device in data.get('rows', []):
                         if device.get('DeviceName') == device_name:
                             return device.get("DeviceID")
@@ -135,7 +129,7 @@ class DeviceAssignmentApp(QWidget):
         It validates input, fetches the device ID, retrieves group data,
         finds a matching group based on valid prefixes, and finally assigns the device.
         """
-        store_id = self.entry_store.text().strip()  # This variable can be a numeric ID or any code
+        store_id = self.entry_store.text().strip()  # This can be a numeric ID or any custom code.
         device_name = self.entry_device.text().strip()
 
         # Validate that both store ID and device name are provided.
@@ -143,7 +137,6 @@ class DeviceAssignmentApp(QWidget):
             QMessageBox.critical(self, "Input Error", "Both Store ID and Device Name are required!")
             return
 
-        # Clear previous output and start logging
         self.txt_output.clear()
         self.append_output("Fetching device ID...")
 
@@ -158,7 +151,6 @@ class DeviceAssignmentApp(QWidget):
         self.append_output(f"Found Device ID: {device_id} for Device Name: {device_name}")
         self.append_output("Fetching groups from API...")
 
-        # Fetch group information using a GET request
         try:
             response = requests.get(
                 self.group_url,
@@ -169,7 +161,6 @@ class DeviceAssignmentApp(QWidget):
             response.raise_for_status()
             raw_data = response.json()
 
-            # Validate that the expected 'data' key exists in the JSON response
             if isinstance(raw_data, dict) and "data" in raw_data:
                 inner_data = raw_data["data"]
                 if isinstance(inner_data, dict) and "Groups" in inner_data and isinstance(inner_data["Groups"], list):
@@ -196,10 +187,23 @@ class DeviceAssignmentApp(QWidget):
             QMessageBox.critical(self, "JSON Error", err)
             return
 
-        # Define valid group path prefixes.
-        # The valid_prefixes are built using the store_id.
-        # If your store identifier is not numeric or requires a different structure,
-        # modify the strings below accordingly.
+        # -----------------------------------------------
+        # Group Matching Section:
+        #
+        # The following code identifies the correct group by checking
+        # if the group's path starts with any of the valid prefixes.
+        # The valid_prefixes list is currently constructed using the store_id.
+        # For example, if your group paths are formatted as "Home/PDA/DE/PLACEHOLDER/XXXX",
+        # where "XXXX" is the store ID, then the prefix would be "Home/PDA/DE/PLACEHOLDER/{store_id}".
+        #
+        # If you wish to change this logic:
+        # - For a different format (e.g., "Store_{store_id}_Group"), modify the string in the list accordingly.
+        # - If you want to use a different matching criteria (e.g., regex or exact match), replace the
+        #   any(group.get("GroupPath", "").startswith(prefix) for prefix in valid_prefixes)
+        #   with your custom logic.
+        #
+        # Update the valid_prefixes list below with your preferred group naming format.
+        # -----------------------------------------------
         valid_prefixes = [
             f"Home/PDA/DE/PLACEHOLDER/{store_id}",
             f"Home/PDA/PL/PLACEHOLDER/{store_id}",
@@ -214,11 +218,12 @@ class DeviceAssignmentApp(QWidget):
         ]
 
         self.append_output("Searching for matching group...")
-        # Find the first group that matches one of the valid prefixes
         matching_group = next(
             (
                 group for group in groups_list
-                if isinstance(group, dict) and any(group.get("GroupPath", "").startswith(prefix) for prefix in valid_prefixes)
+                if isinstance(group, dict) and any(
+                    group.get("GroupPath", "").startswith(prefix) for prefix in valid_prefixes
+                )
             ),
             None
         )
@@ -244,7 +249,6 @@ class DeviceAssignmentApp(QWidget):
 
         self.append_output("Sending device assignment request...")
 
-        # Send the device assignment request using a PUT method
         try:
             assign_response = requests.put(
                 self.assignment_url,
